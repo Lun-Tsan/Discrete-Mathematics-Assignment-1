@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Best Path Finder with Least Turns</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #grid {
+            display: grid;
+            grid-gap: 2px;
+            margin-top: 20px;
+        }
+        .cell {
+            width: 30px;
+            height: 30px;
+            background-color: #e0e0e0;
+            border: 1px solid #bdbdbd;
+            position: relative;
+        }
+        .start {
+            background-color: #81c784;
+        }
+        .end {
+            background-color: #64b5f6;
+        }
+        .obstacle {
+            background-color: #d32f2f;
+        }
+        .path {
+            background-color: #ffeb3b;
+        }
+        /* Ensure start and end colors override the path color */
+        .start.path {
+            background-color: #81c784;
+        }
+        .end.path {
+            background-color: #64b5f6;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        button {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Best Path Finder with Least Turns</h1>
+    <p>Find and display the best path (with the least number of turns) from start to end in an \( n \times n \) grid with obstacles.</p>
+
+    <label for="gridSize">Enter grid size n (positive integer):</label>
+    <input type="number" id="gridSize" min="1" value="5">
+
+    <label for="obstacleDensity">Enter obstacle density (0 to 1):</label>
+    <input type="number" id="obstacleDensity" min="0" max="1" step="0.01" value="0.2">
+
+    <button onclick="findBestPath()">Find Best Path</button>
+    <button onclick="resetGrid()">Reset Grid</button>
+
+    <h2 id="result"></h2>
+    <h2 id="bestPathResult"></h2>
+
+    <div id="grid"></div>
+
+    <script>
+        let grid = [];
+        let n = 0;
+        let obstacleDensity = 0;
+        let pathCells = [];
+
+        function findBestPath() {
+            n = parseInt(document.getElementById('gridSize').value);
+            obstacleDensity = parseFloat(document.getElementById('obstacleDensity').value);
+
+            if (isNaN(n) || n < 1) {
+                alert('Please enter a valid positive integer for grid size!');
+                return;
+            }
+            if (isNaN(obstacleDensity) || obstacleDensity < 0 || obstacleDensity > 1) {
+                alert('Please enter a valid obstacle density between 0 and 1!');
+                return;
+            }
+
+            // Initialize grid and place a fixed number of obstacles
+            initializeGrid(n, obstacleDensity);
+
+            // Find the best path with the least number of turns
+            let bestPathResult = findPathWithLeastTurns();
+
+            // Calculate the total number of possible paths
+            let totalPaths = calculateTotalPaths(n);
+
+            document.getElementById('result').innerText = `In a ${n} × ${n} grid with obstacle probability ${obstacleDensity}, there are ${totalPaths} possible paths from start to end.`;
+
+            if (bestPathResult.found) {
+                document.getElementById('bestPathResult').innerText = `Found a best path with ${bestPathResult.turns} turns.`;
+                pathCells = bestPathResult.path;
+            } else {
+                document.getElementById('bestPathResult').innerText = 'No path found from start to end.';
+                pathCells = [];
+            }
+
+            // Draw the grid with obstacles and the best path
+            drawGrid(n);
+        }
+
+        function initializeGrid(size, density) {
+            // Calculate the total number of obstacles
+            let totalCells = size * size;
+            let totalObstacles = Math.floor(totalCells * density);
+
+            // Create a list of all cell positions
+            let allPositions = [];
+            for (let i = 0; i < totalCells; i++) {
+                allPositions.push(i);
+            }
+
+            // Shuffle the positions
+            shuffleArray(allPositions);
+
+            // Select the first 'totalObstacles' positions to be obstacles
+            let obstaclePositions = allPositions.slice(0, totalObstacles);
+
+            // Initialize the grid with zeros
+            grid = [];
+            for (let i = 0; i < size; i++) {
+                grid[i] = [];
+                for (let j = 0; j < size; j++) {
+                    grid[i][j] = 0;
+                }
+            }
+
+            // Place obstacles in the grid
+            obstaclePositions.forEach(pos => {
+                let i = Math.floor(pos / size);
+                let j = pos % size;
+                grid[i][j] = -1; // -1 represents an obstacle
+            });
+        }
+
+        function shuffleArray(array) {
+            // Fisher-Yates shuffle algorithm
+            for (let i = array.length - 1; i > 0; i--) {
+                let j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function findPathWithLeastTurns() {
+            if (grid[0][0] === -1 || grid[n - 1][n - 1] === -1) {
+                return { found: false };
+            }
+
+            // Directions: right (0), down (1)
+            let directions = [
+                { dx: 0, dy: 1, dir: 0 }, // Right
+                { dx: 1, dy: 0, dir: 1 }  // Down
+            ];
+
+            // Visited array: stores minimum turns to reach a cell with a given direction
+            let visited = [];
+            for (let i = 0; i < n; i++) {
+                visited[i] = [];
+                for (let j = 0; j < n; j++) {
+                    visited[i][j] = { turns: Infinity, dir: -1 };
+                }
+            }
+
+            // Queue for BFS: stores { x, y, turns, dir, path }
+            let queue = [];
+
+            // Start by adding the starting cell to the queue
+            if (grid[0][0] !== -1) {
+                queue.push({ x: 0, y: 0, turns: 0, dir: -1, path: [{ x: 0, y: 0 }] });
+                visited[0][0] = { turns: 0, dir: -1 };
+            }
+
+            let found = false;
+            let minTurns = Infinity;
+            let bestPath = [];
+
+            while (queue.length > 0) {
+                let current = queue.shift();
+                let { x, y, turns, dir, path } = current;
+
+                if (x === n - 1 && y === n - 1) {
+                    // Reached the end
+                    if (turns < minTurns) {
+                        minTurns = turns;
+                        bestPath = path.slice();
+                        found = true;
+                    }
+                    continue;
+                }
+
+                for (let d = 0; d < directions.length; d++) {
+                    let nx = x + directions[d].dx;
+                    let ny = y + directions[d].dy;
+                    let ndir = directions[d].dir;
+
+                    if (nx >= 0 && nx < n && ny >= 0 && ny < n && grid[nx][ny] !== -1) {
+                        let nturns = dir === -1 ? 0 : turns + (dir !== ndir ? 1 : 0);
+
+                        if (nturns <= minTurns && nturns <= visited[nx][ny].turns) {
+                            visited[nx][ny] = { turns: nturns, dir: ndir };
+                            queue.push({
+                                x: nx,
+                                y: ny,
+                                turns: nturns,
+                                dir: ndir,
+                                path: path.concat({ x: nx, y: ny })
+                            });
+                        }
+                    }
+                }
+            }
+
+            if (found) {
+                return { found: true, turns: minTurns, path: bestPath };
+            } else {
+                return { found: false };
+            }
+        }
+
+        function calculateTotalPaths(size) {
+            if (grid[0][0] === -1 || grid[size - 1][size - 1] === -1) {
+                return 0;
+            }
+
+            let dp = [];
+            for (let i = 0; i < size; i++) {
+                dp[i] = [];
+                for (let j = 0; j < size; j++) {
+                    dp[i][j] = 0;
+                }
+            }
+
+            dp[0][0] = 1; // Start position
+
+            // Fill the first row
+            for (let j = 1; j < size; j++) {
+                if (grid[0][j] === -1) {
+                    dp[0][j] = 0;
+                } else {
+                    dp[0][j] = dp[0][j - 1];
+                }
+            }
+
+            // Fill the first column
+            for (let i = 1; i < size; i++) {
+                if (grid[i][0] === -1) {
+                    dp[i][0] = 0;
+                } else {
+                    dp[i][0] = dp[i - 1][0];
+                }
+            }
+
+            // Fill the rest of the grid
+            for (let i = 1; i < size; i++) {
+                for (let j = 1; j < size; j++) {
+                    if (grid[i][j] === -1) {
+                        dp[i][j] = 0;
+                    } else {
+                        dp[i][j] = dp[i - 1][j] + dp[i][j - 1];
+                    }
+                }
+            }
+
+            return dp[size - 1][size - 1];
+        }
+
+        function drawGrid(size) {
+            let gridContainer = document.getElementById('grid');
+            gridContainer.innerHTML = '';
+            gridContainer.style.gridTemplateColumns = `repeat(${size}, 30px)`;
+
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    let cell = document.createElement('div');
+                    cell.classList.add('cell');
+
+                    if (grid[i][j] === -1) {
+                        cell.classList.add('obstacle');
+                        cell.title = `Obstacle (${i}, ${j})`;
+                    } else {
+                        // Add the start and end classes to color the cells
+                        if (i === 0 && j === 0) {
+                            cell.classList.add('start');
+                            cell.title = 'Start (0, 0)';
+                        } else if (i === size - 1 && j === size - 1) {
+                            cell.classList.add('end');
+                            cell.title = `End (${size - 1}, ${size - 1})`;
+                        }
+
+                        // Highlight the best path
+                        if (pathCells.some(pos => pos.x === i && pos.y === j)) {
+                            cell.classList.add('path');
+                        }
+                    }
+
+                    gridContainer.appendChild(cell);
+                }
+            }
+        }
+
+        function resetGrid() {
+            document.getElementById('gridSize').value = 5;
+            document.getElementById('obstacleDensity').value = 0.2;
+            document.getElementById('result').innerText = '';
+            document.getElementById('bestPathResult').innerText = '';
+            document.getElementById('grid').innerHTML = '';
+            grid = [];
+            pathCells = [];
+        }
+    </script>
+</body>
+</html>
