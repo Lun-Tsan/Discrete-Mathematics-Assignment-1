@@ -2,6 +2,7 @@ from possible_path import possible_path_main
 from best_path_trend import best_path_trend_main
 from avg_turn import avg_turn_main
 from algo_compare import algo_compare_main
+from best_path_count import best_path_count_main
 
 def main():
     # Run the possible_path module
@@ -13,6 +14,11 @@ def main():
     print("Running best_path_trend module...")
     best_path_trend_main()
     print("Finished best_path_trend module.\n")
+
+    # Run the best_path_count module
+    print("Running best_path_count module...")
+    best_path_count_main()
+    print("Finished best_path_count module.\n")
 
     # Run the avg_turn module
     print("Running avg_turn module...")

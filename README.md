@@ -31,6 +31,7 @@ pip install -r requirements.txt
 - **Python Scripts**:
   - `possible_path.py`: Simulates and plots the number of possible paths with obstacles.
   - `best_path_trend.py`: Analyzes and plots trends for the number of best paths.
+  - `best_path_count.py`: Count the number of best paths with obstacles.
   - `avg_turn.py`: Calculates and plots average turns in best paths.
   - `algo_compare.py`: Compares algorithms (Recursive, Dynamic Programming, Combinatorial, Dijkstra).
   - `main.py`: Runs all the above scripts.
