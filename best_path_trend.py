@@ -1,11 +1,9 @@
 import matplotlib.pyplot as plt
 import math
+import os
 
 def factorial(n):
     return math.factorial(n)
-
-def compute_total_paths(n):
-    return factorial(2 * n - 2) // (factorial(n - 1) ** 2)
 
 def compute_paths_with_t_turns(n, t):
     """
@@ -30,8 +28,11 @@ def compute_paths_with_t_turns(n, t):
 def combinations(n, k):
     return factorial(n) // (factorial(k) * factorial(n - k))
 
-def main():
-    n_values = range(2, 17)  # Grid sizes from 2x2 to 10x10
+def best_path_trend_main():
+    save_folder = 'result_images'
+    if not os.path.exists(save_folder):
+        os.makedirs(save_folder)
+    n_values = range(2, 17)  # Grid sizes from 2x2 to 16x16
     min_turns = 1  # Minimum number of turns
     min_plus_one_turns = 2  # Minimum number of turns plus one
 
@@ -57,13 +58,12 @@ def main():
     plt.xticks(n_values)
     plt.legend()
     plt.grid(True)
-    plt.show()
+    # Save the figure
+    plt.savefig(os.path.join(save_folder, 'best_path_trend.png'))
+    plt.close()
 
     # Print the results
     print("Grid Size (n) | Paths with Min Turns | Paths with Min Turns + 1")
     print("-------------------------------------------------------------")
     for idx, n in enumerate(n_values):
         print(f"{n:13} | {paths_with_min_turns[idx]:20} | {paths_with_min_plus_one_turns[idx]:24}")
-
-if __name__ == "__main__":
-    main()

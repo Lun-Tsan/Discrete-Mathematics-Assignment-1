@@ -3,6 +3,7 @@ import sys
 import time
 import math
 import matplotlib.pyplot as plt
+import os
 from collections import deque
 
 sys.setrecursionlimit(1000000)  # Increase recursion limit if necessary
@@ -119,11 +120,12 @@ def count_best_paths_combinatorial(n):
     # Number of paths with minimal number of turns (1 turn)
     return 2, 1  # (number of paths, minimal turns)
 
-def main():
+def algo_compare_main():
     import time
     random.seed(11505050)
-    grid_sizes = [5, 10, 20, 50, 100, 200, 500]
-    obstacle_densities = [0.0, 0.1, 0.2]
+    save_folder = 'result_images'
+    grid_sizes = [5, 10, 100, 200, 300]  # Adjusted for demonstration
+    obstacle_densities = [0.0, 0.1, 0.2, 0.3]
     methods = ['Recursive', 'Dynamic Prog.', 'Combinatorial']
 
     # Data structures to store results
@@ -137,18 +139,20 @@ def main():
             grid = generate_grid(n, density)
 
             # Recursive Method
-
-            start_time = time.time()
-            total_paths_rec, min_turns_rec = count_best_paths_recursive(grid)
-            time_rec = time.time() - start_time
-            results['Recursive'][density]['sizes'].append(n)
-            results['Recursive'][density]['times'].append(time_rec)
-            results['Recursive'][density]['paths'].append(total_paths_rec)
-            results['Recursive'][density]['turns'].append(min_turns_rec)
-            print(f"{n:<10} {density:<10} {'Recursive':<15} "
-                    f"{total_paths_rec if total_paths_rec is not None else 'N/A':<10} "
-                    f"{min_turns_rec if min_turns_rec is not None else 'N/A':<10} "
-                    f"{time_rec:<10.4f}")
+            if n <= 1000:  # Limit recursive method to small grids
+                start_time = time.time()
+                total_paths_rec, min_turns_rec = count_best_paths_recursive(grid)
+                time_rec = time.time() - start_time
+                results['Recursive'][density]['sizes'].append(n)
+                results['Recursive'][density]['times'].append(time_rec)
+                results['Recursive'][density]['paths'].append(total_paths_rec)
+                results['Recursive'][density]['turns'].append(min_turns_rec)
+                print(f"{n:<10} {density:<10} {'Recursive':<15} "
+                      f"{total_paths_rec if total_paths_rec is not None else 'N/A':<10} "
+                      f"{min_turns_rec if min_turns_rec is not None else 'N/A':<10} "
+                      f"{time_rec:<10.4f}")
+            else:
+                print(f"{n:<10} {density:<10} {'Recursive':<15} {'N/A':<10} {'N/A':<10} {'N/A':<10}")
 
             # Dynamic Programming Method
             start_time = time.time()
@@ -189,7 +193,10 @@ def main():
         plt.ylabel('Execution Time (s)')
         plt.legend()
         plt.grid(True)
-        plt.show()
+        # Save the figure
+        filename = f'execution_time_{method.replace(" ", "_")}.png'
+        plt.savefig(os.path.join(save_folder, filename))
+        plt.close()
 
     # Plotting the number of paths
     for method in methods:
@@ -203,7 +210,10 @@ def main():
         plt.ylabel('Number of Best Paths')
         plt.legend()
         plt.grid(True)
-        plt.show()
+        # Save the figure
+        filename = f'number_of_paths_{method.replace(" ", "_")}.png'
+        plt.savefig(os.path.join(save_folder, filename))
+        plt.close()
 
     # Plotting the minimal number of turns (if applicable)
     for method in methods:
@@ -217,7 +227,7 @@ def main():
         plt.ylabel('Minimal Number of Turns')
         plt.legend()
         plt.grid(True)
-        plt.show()
-
-if __name__ == "__main__":
-    main()
+        # Save the figure
+        filename = f'minimal_turns_{method.replace(" ", "_")}.png'
+        plt.savefig(os.path.join(save_folder, filename))
+        plt.close()

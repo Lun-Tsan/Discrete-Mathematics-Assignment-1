@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 from collections import deque
+import os
 
 def generate_grid(n, obstacle_density):
     """
@@ -118,6 +119,9 @@ def plot_results(n_values, results, obstacle_densities):
     """
     Plots the results of the simulation, handling cases where no paths were found.
     """
+    save_folder = 'result_images'
+    if not os.path.exists(save_folder):
+        os.makedirs(save_folder)
     plt.figure(figsize=(12, 8))
     for density, avg_turns in results.items():
         x_values = n_values
@@ -137,10 +141,12 @@ def plot_results(n_values, results, obstacle_densities):
     plt.ylabel('Average Number of Turns in Best Path')
     plt.legend()
     plt.grid(True)
-    plt.show()
+    # Save the figure
+    plt.savefig(os.path.join(save_folder, 'average_turns.png'))
+    plt.close()
 
-def main():
-    n_values = range(2, 17)  # Grid sizes from 2x2 to 10x10
+def avg_turn_main():
+    n_values = range(2, 17)  # Grid sizes from 2x2 to 16x16
     obstacle_densities = [0.0, 0.2, 0.4, 0.5, 0.7]  # Different obstacle densities
     simulations_per_point = 10000  # Number of simulations to average for each point
     random.seed(11505050)
@@ -157,6 +163,3 @@ def main():
                 print(f"{n:<13} | {density:<16} | {avg_turns:<22.2f}")
             else:
                 print(f"{n:<13} | {density:<16} | {'No Path Found':<22}")
-
-if __name__ == "__main__":
-    main()

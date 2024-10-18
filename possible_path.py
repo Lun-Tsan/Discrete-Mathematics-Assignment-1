@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import random
+import os
 
 def generate_grid(n, obstacle_density):
     """
@@ -90,6 +91,9 @@ def plot_results(n_values, results, obstacle_densities):
     """
     Plots the results of the simulation.
     """
+    save_folder = 'result_images'
+    if not os.path.exists(save_folder):
+        os.makedirs(save_folder)
     plt.figure(figsize=(16, 8))
     zero_paths_label_added = False  # Flag to track if 'Zero Paths' label has been added
     for density, avg_paths in results.items():
@@ -124,15 +128,14 @@ def plot_results(n_values, results, obstacle_densities):
     plt.yscale('log')  # Use logarithmic scale for y-axis
     plt.legend()
     plt.grid(True)
-    plt.show()
+    # Save the figure
+    plt.savefig(os.path.join(save_folder, 'possible_paths.png'))
+    plt.close()
 
-def main():
+def possible_path_main():
     n_values = range(2, 17)  # Grid sizes from 2x2 to 16x16
     obstacle_densities = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]  # Different obstacle densities
-    simulations_per_point = 1000  # Number of simulations to average for each point
+    simulations_per_point = 10000  # Number of simulations to average for each point
     random.seed(11505050)
     results = simulate(n_values, obstacle_densities, simulations_per_point)
     plot_results(n_values, results, obstacle_densities)
-
-if __name__ == "__main__":
-    main()
