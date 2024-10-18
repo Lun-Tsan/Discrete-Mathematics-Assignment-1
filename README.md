@@ -36,7 +36,7 @@ pip install -r requirements.txt
   - `main.py`: Runs all the above scripts.
 
 - **HTML Visualization**:
-  - `grid_visualization.html`: Interactive visualization for finding the best path in an \(n \times n\) grid.
+  - `visualize.html`: Interactive visualization for finding the best path in an \(n \times n\) grid.
 
 - **Output Folder**:
   - `result_images/`: Stores generated plots from each script.
